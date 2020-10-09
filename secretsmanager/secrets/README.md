@@ -15,5 +15,11 @@ list the buckets in S3 using that new role
 mvn clean install
 ```
 
+#### Execute the tests.
+```
+mvn package
+```
 
+The tests run without an invalid ARN.  Modify AssumeRoleDemoTest to add your valid
+arn and enable full function execution.
 
