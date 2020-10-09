@@ -20,6 +20,6 @@ mvn clean install
 mvn package
 ```
 
-The tests run without an invalid ARN.  Modify AssumeRoleDemoTest to add your valid
+The tests run with an invalid ARN.  Modify AssumeRoleDemoTest to add your valid
 arn and enable full function execution.
 
