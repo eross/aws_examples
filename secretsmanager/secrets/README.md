@@ -23,3 +23,9 @@ mvn package
 The tests run with an invalid ARN.  Modify AssumeRoleDemoTest to add your valid
 arn and enable full function execution.
 
+#### Manual execution
+Logon to AWS.
+java -jar target/stssandbox-1.0-SNAPSHOT.jar <arn>
+
+<arn> is a role that your User or Role can assume
+

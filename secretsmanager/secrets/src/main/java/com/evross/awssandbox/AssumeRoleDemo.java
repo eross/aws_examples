@@ -2,8 +2,13 @@ package com.evross.awssandbox;
 
 import software.amazon.awssdk.services.s3.model.Bucket;
 import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.sts.StsClient;
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider;
 import software.amazon.awssdk.services.sts.model.*;
 
@@ -21,7 +26,9 @@ import java.util.Locale;
 public class AssumeRoleDemo {
     private static StsClient stsClient;
     private static final String ROLESESSIONNAME = "assumerole_demo";
+    private static final String BUCKET = "assume-demo";
     private static S3Client s3Client;
+    private static S3Client s3DevClient;
     private static StsClient stsAssumedClient;
 
 
@@ -109,6 +116,71 @@ public class AssumeRoleDemo {
         for (Bucket b : blist) {
             System.out.println(b.name());
         }
+
+        System.out.println("\n\n++++++++++++++++++  role == DEVELOPER      +++++++++++++++++++");
+        System.out.println("++++++++++++++++++  FILES IN "+ BUCKET + "+++++++++++++++++++");
+        s3DevClient = S3Client.builder()
+            .credentialsProvider(ProfileCredentialsProvider.builder().build())
+            .build();
+
+        try {
+            ListObjectsRequest listObjects = ListObjectsRequest
+                .builder()
+                .bucket(BUCKET)
+                .build();
+
+            ListObjectsResponse res = s3DevClient.listObjects(listObjects);
+            List<S3Object> objects = res.contents();
+            for (S3Object myValue : objects) {
+                System.out.print("\n The name of the key is " + myValue.key());
+                System.out.print("\n The object is " + myValue.size()/1024 + " KBs");
+                System.out.print("\n The owner is " + myValue.owner());
+            }
+
+        } catch (S3Exception e) {
+            System.err.println("ERROR ACCESSING" + BUCKET);
+            System.err.println(e.awsErrorDetails().errorMessage());
+        }
+
+        System.out.println("\n\n+++++++++++++++++++++++++++++++++++++");
+
+   
+
+        // Now list objects in "aaservice-pie".  This is blocked to DEVELOPERS but should be available from other roles.
+        System.out.println("\n\n++++++++++++++++++  role == " + roleArn + "      +++++++++++++++++++");
+        System.out.println("++++++++++++++++++  FILES IN "+ BUCKET + "+++++++++++++++++++");
+        try {
+            ListObjectsRequest listObjects = ListObjectsRequest
+                .builder()
+                .bucket(BUCKET)
+                .build();
+
+            ListObjectsResponse res = s3Client.listObjects(listObjects);
+            List<S3Object> objects = res.contents();
+            for (S3Object myValue : objects) {
+                System.out.print("\n The name of the key is " + myValue.key());
+                System.out.print("\n The object is " + myValue.size()/1024 + " KBs");
+                System.out.print("\n The owner is " + myValue.owner());
+                System.out.println("\n------------------");
+            }
+
+        } catch (S3Exception e) {
+            System.err.println("ERROR ACCESSING " + BUCKET);
+            System.err.println(e.awsErrorDetails().errorMessage());
+        }
+        System.out.println("\n\n+++++++++++++++++++++++++++++++++++++");
+    
+
+
+
+
+        ListObjectsRequest listObjects = ListObjectsRequest
+            .builder()
+            .bucket(BUCKET)
+            .build();
+
+        ListObjectsResponse res = s3Client.listObjects(listObjects);
+
         // just for kicks let's get a new sts client that is now running under the assumed role.
         //  You can use this to chain your assumptions  role1->role2->role3...
         stsAssumedClient = Clients.stsAssumeClient(provider);
